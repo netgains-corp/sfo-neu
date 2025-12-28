@@ -22,12 +22,11 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #000000; /* Absolutes Schwarz */
+            background-color: #000000;
             overflow-x: hidden;
             color: #ffffff;
         }
 
-        /* --- LENIS SMOOTH SCROLLING CSS --- */
         html.lenis, html.lenis body {
             height: auto;
         }
@@ -48,7 +47,6 @@
             pointer-events: none;
         }
 
-        /* --- SUBTLE & DARK Background Animation Blobs --- */
         .blob {
             position: fixed;
             filter: blur(120px);
@@ -106,7 +104,6 @@
             100% { transform: translate(-100px, -50px) rotate(360deg) scale(0.9); opacity: 0.1; }
         }
 
-        /* --- ULTRA GLASSY PANELS --- */
         .glass-panel {
             position: relative;
             background: rgba(255, 255, 255, 0.015); 
@@ -127,7 +124,6 @@
             letter-spacing: 0.05em;
         }
 
-        /* Subtiler Glow für KPI Zahlen */
         .glow-number {
             text-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
         }
@@ -206,7 +202,6 @@
             box-shadow: 0 0 25px rgba(45, 212, 191, 0.15);
         }
 
-        /* Progress Bar Animation */
         .progress-bar {
             transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -240,7 +235,6 @@
                 <button class="glass-btn w-10 h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white"><i class="fa-regular fa-bell"></i></button>
                 <div class="flex items-center gap-3 pl-4 border-l border-white/10">
                     <div class="text-right hidden sm:block">
-                        <!-- ID für JS Zugriff hinzugefügt -->
                         <div id="current-user-name" class="text-xs font-bold text-white uppercase tracking-tighter">GUEST</div>
                         <div class="text-[9px] text-teal-400 font-bold uppercase tracking-widest">System Online</div>
                     </div>
@@ -263,7 +257,7 @@
                         <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
                         High Performance Zentrale
                     </div>
-                    <h1 class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter neon-title mb-4 leading-none">SALES FORCE<br>ARSCH</h1>
+                    <h1 class="text-4xl md:text-6xl font-black italic uppercase tracking-tighter neon-title mb-4 leading-none">SALES FORCE<br>ONE</h1>
                     <p class="text-slate-500 text-lg font-medium max-w-md mx-auto md:mx-0 leading-relaxed">Die Marktaktivität ist heute überdurchschnittlich. Alle Systeme im Cloud-Sync sind bereit für die nächste Skalierung.</p>
                     <div class="flex flex-wrap justify-center md:justify-start gap-4 mt-8">
                         <a href="#" class="glass-btn px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-white flex items-center gap-3 bg-white/5 border-teal-500/30 hover:border-teal-400 hover:shadow-[0_0_30px_rgba(45,212,191,0.3)] transition-all"><i class="fa-solid fa-plus text-teal-400"></i> Neuer Lead</a>
@@ -424,214 +418,4 @@
     </main>
 
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <!-- Lenis JS (Smooth Scrolling) -->
-    <script src="https://unpkg.com/lenis@1.0.45/dist/lenis.min.js"></script>
-
-    <script>
-        // --- LENIS INITIALIZATION ---
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            direction: 'vertical',
-            gestureDirection: 'vertical',
-            smooth: true,
-            mouseMultiplier: 1,
-            smoothTouch: false,
-            touchMultiplier: 2,
-        });
-
-        function raf(time) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-
-        requestAnimationFrame(raf);
-
-        // --- DASHBOARD LOGIC ---
-        // Neue, korrigierte Produktions-URL
-        const WEBHOOK_URL = 'https://n8n.srv1164949.hstgr.cloud/webhook/dfd9dbf0-7c8b-470e-910e-fddec3bae8e9';
-
-        // --- ZERO TRUST LOGIC (Frontend Only) ---
-        // Das ist die Browser-freundliche Version, die direkt in der HTML-Datei funktioniert
-        async function loadUserData() {
-            let userData = { email: 'guest@simulation.local' }; // Standard Simulation Data für Preview
-            let isCloudflare = false;
-
-            try {
-                // 1. Benutzeridentität von Cloudflare Access abrufen
-                // Dieser Endpoint existiert automatisch, wenn die Seite hinter Access liegt.
-                const response = await fetch('/cdn-cgi/access/get-identity');
-                
-                if (response.ok) {
-                    userData = await response.json(); // Liefert { email: "user@example.com", ... }
-                    isCloudflare = true;
-                } else {
-                    console.warn("Preview Modus (Kein Cloudflare Access erkannt). Nutze Simulations-Daten.");
-                }
-            } catch (e) {
-                console.warn("Konnte User-Daten nicht laden (Vermutlich lokaler Modus):", e);
-            }
-
-            // 2. UI Aktualisieren (Email oben rechts anzeigen)
-            if (userData.email) {
-                document.getElementById('current-user-name').innerText = isCloudflare ? userData.email : "DEV: " + userData.email;
-            }
-
-            // 3. Daten an N8n senden (jetzt als GET Request, damit der Webhook nicht blockiert)
-            try {
-                console.log("Sende Daten an N8n...", userData);
-                
-                // Wir nutzen GET Parameter statt POST Body, da der Webhook oft nur eine Methode unterstützt
-                const params = new URLSearchParams({
-                    action: 'user_login',
-                    userEmail: userData.email,
-                    timestamp: new Date().toISOString(),
-                    environment: isCloudflare ? 'production' : 'preview'
-                });
-
-                // WICHTIG: Keine Header mitsenden, damit es ein "Simple Request" bleibt und kein CORS Preflight auslöst
-                await fetch(WEBHOOK_URL + '?' + params.toString(), {
-                    method: 'GET' 
-                });
-                console.log("Daten erfolgreich gesendet (GET).");
-            } catch (postError) {
-                console.error("Fehler beim Senden an N8n:", postError);
-            }
-
-            return userData;
-        }
-        
-        function createDealHTML(deal) {
-            const isMrr = deal.isMrr;
-            const initials = deal.name.substring(0, 2).toUpperCase();
-            const valueFormatted = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(deal.value);
-
-            return `
-            <div class="group flex items-center justify-between p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-teal-500/40 transition-all cursor-pointer shadow-xl">
-                <div class="flex items-center gap-5">
-                    <div class="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-black border border-white/10 shadow-2xl">
-                        ${initials}
-                    </div>
-                    <div>
-                        <h3 class="font-black text-white text-lg tracking-tight">${deal.name}</h3>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="w-2 h-2 rounded-full ${isMrr ? 'bg-cyan-500' : 'bg-teal-500'} ${isMrr ? '' : 'animate-pulse'}"></span>
-                            <p class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">${isMrr ? 'Vertragsverhandlung' : 'Entscheider-Phase'}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="font-black text-xl text-white tracking-tighter">${valueFormatted}</div>
-                    <div class="text-[10px] font-black text-teal-400 bg-teal-500/10 px-3 py-1 rounded-full mt-2 inline-block">
-                        ${isMrr ? 'MRR / Abo' : 'High Prob.'}
-                    </div>
-                </div>
-            </div>
-            `;
-        }
-
-        async function fetchLiveStats() {
-            try {
-                // Wir nutzen denselben Webhook für die Stats, senden aber keine User-Daten im GET Request
-                // (Oder du nutzt POST, falls dein N8n Workflow das erwartet)
-                // Hier auch einen Parameter für GET hinzufügen
-                const response = await fetch(WEBHOOK_URL + '?action=get_stats');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                
-                // KPIs aktualisieren
-                if (data.pipeline) smartAnimate('kpi-pipeline-value', data.pipeline, { prefix: '€ ', isCurrency: true });
-                if (data.mrr) smartAnimate('kpi-passive', data.mrr, { prefix: '€ ', isCurrency: true });
-                if (data.deals) smartAnimate('kpi-units', data.deals);
-
-                // Liste Rendern
-                const container = document.getElementById('pipeline-container');
-                if (data.recentDeals && Array.isArray(data.recentDeals)) {
-                    container.innerHTML = ''; 
-                    data.recentDeals.forEach((deal, index) => {
-                        setTimeout(() => {
-                            container.insertAdjacentHTML('beforeend', createDealHTML(deal));
-                        }, index * 100);
-                    });
-                }
-
-            } catch (error) {
-                console.error("Live Daten Fetch Fehler:", error);
-                const container = document.getElementById('pipeline-container');
-                if(container && container.children.length <= 1) {
-                   container.innerHTML = `<div class="text-center text-slate-500 text-xs py-10 font-bold uppercase tracking-widest">
-                       Verbindung unterbrochen <br> <span style="font-size:9px; opacity:0.7">Prüfe CORS / Webhook</span>
-                   </div>`;
-                }
-            }
-        }
-
-        function smartAnimate(id, endValue, options = {}) {
-            const obj = document.getElementById(id);
-            if (!obj) return;
-            const currentText = obj.innerText.replace(/\D/g, ''); 
-            const startValue = parseInt(currentText) || 0;
-            if (startValue !== endValue) {
-                animateValue(obj, startValue, endValue, 2000, options);
-            }
-        }
-
-        function animateValue(obj, start, end, duration, formatOptions = {}) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const easeProgress = 1 - (1 - progress) * (1 - progress); 
-                const current = easeProgress * (end - start) + start;
-                
-                let value = current;
-                if (formatOptions.isCurrency) {
-                    value = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(current);
-                    obj.innerHTML = (formatOptions.prefix || '') + value;
-                } else {
-                    value = Math.floor(current);
-                    obj.innerHTML = (formatOptions.prefix || '') + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                }
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        window.onload = async () => {
-            // Statische Animationen
-            animateValue(document.getElementById('kpi-target'), 0, 82, 2000);
-            setTimeout(() => { document.getElementById('target-progress').style.width = '82%'; }, 100);
-            animateValue(document.getElementById('kpi-payout'), 0, 3, 1500);
-
-            // 1. Map initialisieren
-            const map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6); 
-            L.control.zoom({ position: 'topright' }).addTo(map);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO' }).addTo(map);
-            const locations = [
-                { lat: 52.5200, lng: 13.4050, name: "TechCorp HQ", value: "€45k", type: "hot", city: "Berlin" }, 
-                { lat: 48.1351, lng: 11.5820, name: "Müller Group", value: "€12k", type: "warm", city: "München" }, 
-                { lat: 53.5511, lng: 9.9937, name: "Innovate AG", value: "€120k", type: "hot", city: "Hamburg" }, 
-                { lat: 50.1109, lng: 8.6821, name: "Finance Hub", value: "€32k", type: "warm", city: "Frankfurt" },
-                { lat: 47.3769, lng: 8.5417, name: "Crypto Valley", value: "€65k", type: "hot", city: "Zürich" }
-            ];
-            locations.forEach(loc => {
-                let color = loc.type === 'hot' ? '#14b8a6' : '#06b6d4';
-                let radius = loc.type === 'hot' ? 14 : 10;
-                const circle = L.circleMarker([loc.lat, loc.lng], { color: color, fillColor: color, fillOpacity: 0.8, radius: radius, weight: 2 }).addTo(map);
-                circle.bindPopup(`<div style="font-family: 'Plus Jakarta Sans', sans-serif;"><div style="font-size: 8px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;">${loc.city}</div><div style="font-weight: 900; font-size: 14px; color: #fff;">${loc.name}</div><div style="margin-top: 10px; color: #2dd4bf; font-weight: 800; font-size: 12px;">Wert: ${loc.value}</div></div>`);
-                circle.on('mouseover', function (e) { this.openPopup(); });
-            });
-
-            // 2. Benutzer-Daten laden (Zero Trust Check)
-            // Warten bis fertig, bevor Stats geladen werden
-            await loadUserData();
-
-            // 3. Live Daten Fetch Starten
-            fetchLiveStats();
-            setInterval(fetchLiveStats, 10000);
-        };
-    </script>
-</body>
-</html>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qI
