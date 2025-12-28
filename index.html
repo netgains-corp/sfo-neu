@@ -456,40 +456,49 @@
         // --- ZERO TRUST LOGIC (Frontend Only) ---
         // Das ist die Browser-freundliche Version, die direkt in der HTML-Datei funktioniert
         async function loadUserData() {
+            let userData = { email: 'guest@simulation.local' }; // Standard Simulation Data für Preview
+            let isCloudflare = false;
+
             try {
                 // 1. Benutzeridentität von Cloudflare Access abrufen
                 // Dieser Endpoint existiert automatisch, wenn die Seite hinter Access liegt.
                 const response = await fetch('/cdn-cgi/access/get-identity');
                 
-                if (!response.ok) {
-                    throw new Error('Nicht hinter Cloudflare Access oder Login fehlt');
+                if (response.ok) {
+                    userData = await response.json(); // Liefert { email: "user@example.com", ... }
+                    isCloudflare = true;
+                } else {
+                    console.warn("Preview Modus (Kein Cloudflare Access erkannt). Nutze Simulations-Daten.");
                 }
+            } catch (e) {
+                console.warn("Konnte User-Daten nicht laden (Vermutlich lokaler Modus):", e);
+            }
 
-                const userData = await response.json(); // Liefert { email: "user@example.com", ... }
-                
-                // 2. UI Aktualisieren (Email oben rechts anzeigen)
-                if (userData.email) {
-                    document.getElementById('current-user-name').innerText = userData.email;
-                }
+            // 2. UI Aktualisieren (Email oben rechts anzeigen)
+            if (userData.email) {
+                document.getElementById('current-user-name').innerText = isCloudflare ? userData.email : "DEV: " + userData.email;
+            }
 
-                // 3. Optional: Daten an N8n senden, damit der Workflow weiß, wer da ist
+            // 3. Daten an N8n senden, damit der Workflow weiß, wer da ist
+            // WICHTIG: Das passiert jetzt IMMER, auch im Preview-Modus (mit Dummy-Daten)
+            try {
+                console.log("Sende Daten an N8n...", userData);
                 await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         userEmail: userData.email, 
                         timestamp: new Date().toISOString(),
-                        action: 'user_identified'
+                        action: 'user_identified',
+                        environment: isCloudflare ? 'production' : 'preview'
                     })
                 });
-
-                return userData;
-
-            } catch (e) {
-                console.warn("Konnte User-Daten nicht laden (Vermutlich lokaler Modus):", e);
-                document.getElementById('current-user-name').innerText = "FLORIAN M. (DEV)";
-                return null;
+                console.log("Daten erfolgreich gesendet.");
+            } catch (postError) {
+                console.error("Fehler beim Senden an N8n:", postError);
             }
+
+            return userData;
         }
         
         function createDealHTML(deal) {
