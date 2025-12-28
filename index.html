@@ -491,9 +491,9 @@
                     environment: isCloudflare ? 'production' : 'preview'
                 });
 
+                // WICHTIG: Keine Header mitsenden, damit es ein "Simple Request" bleibt und kein CORS Preflight auslöst
                 await fetch(WEBHOOK_URL + '?' + params.toString(), {
-                    method: 'GET', // Explizit GET
-                    headers: { 'Content-Type': 'application/json' }
+                    method: 'GET' 
                 });
                 console.log("Daten erfolgreich gesendet (GET).");
             } catch (postError) {
@@ -599,7 +599,7 @@
             window.requestAnimationFrame(step);
         }
 
-        window.onload = () => {
+        window.onload = async () => {
             // Statische Animationen
             animateValue(document.getElementById('kpi-target'), 0, 82, 2000);
             setTimeout(() => { document.getElementById('target-progress').style.width = '82%'; }, 100);
@@ -625,7 +625,8 @@
             });
 
             // 2. Benutzer-Daten laden (Zero Trust Check)
-            loadUserData();
+            // Warten bis fertig, bevor Stats geladen werden
+            await loadUserData();
 
             // 3. Live Daten Fetch Starten
             fetchLiveStats();
