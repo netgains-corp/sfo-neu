@@ -479,21 +479,23 @@
                 document.getElementById('current-user-name').innerText = isCloudflare ? userData.email : "DEV: " + userData.email;
             }
 
-            // 3. Daten an N8n senden, damit der Workflow weiß, wer da ist
-            // WICHTIG: Das passiert jetzt IMMER, auch im Preview-Modus (mit Dummy-Daten)
+            // 3. Daten an N8n senden (jetzt als GET Request, damit der Webhook nicht blockiert)
             try {
                 console.log("Sende Daten an N8n...", userData);
-                await fetch(WEBHOOK_URL + '?action=user_login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        userEmail: userData.email, 
-                        timestamp: new Date().toISOString(),
-                        action: 'user_identified',
-                        environment: isCloudflare ? 'production' : 'preview'
-                    })
+                
+                // Wir nutzen GET Parameter statt POST Body, da der Webhook oft nur eine Methode unterstützt
+                const params = new URLSearchParams({
+                    action: 'user_login',
+                    userEmail: userData.email,
+                    timestamp: new Date().toISOString(),
+                    environment: isCloudflare ? 'production' : 'preview'
                 });
-                console.log("Daten erfolgreich gesendet.");
+
+                await fetch(WEBHOOK_URL + '?' + params.toString(), {
+                    method: 'GET', // Explizit GET
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                console.log("Daten erfolgreich gesendet (GET).");
             } catch (postError) {
                 console.error("Fehler beim Senden an N8n:", postError);
             }
