@@ -240,7 +240,7 @@
                 <button class="glass-btn w-10 h-10 rounded-full flex items-center justify-center text-white/80 hover:text-white"><i class="fa-regular fa-bell"></i></button>
                 <div class="flex items-center gap-3 pl-4 border-l border-white/10">
                     <div class="text-right hidden sm:block">
-                        <div class="text-xs font-bold text-white uppercase tracking-tighter">Florian M.</div>
+                        <div id="current-user-name" class="text-xs font-bold text-white uppercase tracking-tighter">Florian M.</div>
                         <div class="text-[9px] text-teal-400 font-bold uppercase tracking-widest">System Online</div>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center border border-white/10 cursor-pointer hover:border-teal-500/50 transition-all shadow-2xl group overflow-hidden">
@@ -451,6 +451,21 @@
         // --- DASHBOARD LOGIC ---
         // Neue, korrigierte Produktions-URL (ohne -test)
         const WEBHOOK_URL = 'https://n8n.srv1164949.hstgr.cloud/webhook/dfd9dbf0-7c8b-470e-910e-fddec3bae8e9';
+
+        // --- USER DATA FETCH (Cloudflare Zero Trust) ---
+        // Im Frontend - API Call an deinen N8n Workflow
+        async function loadUserData() {
+            const response = await fetch('https://dein-n8n-webhook.com/webhook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include' // Wichtig für Header-Weiterleitung
+            });
+            
+            const data = await response.json();
+            return data;
+        }
         
         function createDealHTML(deal) {
             const isMrr = deal.isMrr;
