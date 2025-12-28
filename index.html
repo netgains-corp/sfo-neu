@@ -449,8 +449,8 @@
         requestAnimationFrame(raf);
 
         // --- DASHBOARD LOGIC ---
-        // Hinweis: Der Original-Link wurde beibehalten. Wenn der Server nicht erreichbar ist, wird der 'catch'-Block ausgeführt.
-        const WEBHOOK_URL = 'https://n8n.srv1164949.hstgr.cloud/webhook-test/dfd9dbf0-7c8b-470e-910e-fddec3bae8e9';
+        // Neue, korrigierte Produktions-URL (ohne -test)
+        const WEBHOOK_URL = 'https://n8n.srv1164949.hstgr.cloud/webhook/dfd9dbf0-7c8b-470e-910e-fddec3bae8e9';
         
         function createDealHTML(deal) {
             const isMrr = deal.isMrr;
@@ -484,7 +484,7 @@
         async function fetchLiveStats() {
             try {
                 const response = await fetch(WEBHOOK_URL);
-                if (!response.ok) throw new Error('Network response not ok');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 
                 // KPIs aktualisieren: Smart Animation prüft, ob sich der Wert geändert hat
@@ -504,10 +504,13 @@
                 }
 
             } catch (error) {
-                console.error("Live Daten Fehler:", error);
+                console.error("Live Daten Fetch Fehler:", error);
+                // Fallback UI bei Fehler
                 const container = document.getElementById('pipeline-container');
-                if(container.children.length <= 1) {
-                   container.innerHTML = '<div class="text-center text-slate-500 text-xs py-10 font-bold uppercase tracking-widest">Warte auf Satelliten-Sync...</div>';
+                if(container && container.children.length <= 1) {
+                   container.innerHTML = `<div class="text-center text-slate-500 text-xs py-10 font-bold uppercase tracking-widest">
+                       Verbindung unterbrochen <br> <span style="font-size:9px; opacity:0.7">Prüfe CORS / Webhook</span>
+                   </div>`;
                 }
             }
         }
